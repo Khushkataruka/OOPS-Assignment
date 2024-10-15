@@ -2,6 +2,7 @@ package Users.Admin;
 
 import Exceptions.InvalidInputException;
 import Exceptions.InvalidPasswordException;
+import Exceptions.InvalidProfessorIdException;
 import Exceptions.UserNotFoundException;
 import Users.User;
 
@@ -33,6 +34,20 @@ public class Admin implements User {
                 case 1:
                     ManageStudentRecords.manageStudentRecords(con, sc);
                     break;
+                case 2:
+                    ManageCourseCatalog.manageCourseCatalog(con,sc);
+                    break;
+                case 3:
+                    int count=3;
+                    while (count>0) {
+                        try {
+                            AssignProfessor.assignProfessor(con, sc);
+                            break;
+                        } catch (InvalidProfessorIdException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        count--;
+                    }
                 case 4:
                     System.out.println("ThankYou for Using Admin\n exiting...");
                     try {

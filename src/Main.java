@@ -155,7 +155,7 @@ public class Main {
             con.close();
             sc.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
     }
