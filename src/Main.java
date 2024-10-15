@@ -1,0 +1,146 @@
+import DatabasePackage.DbConnection;
+import Exceptions.*;
+
+import Users.Student.Student;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Main {
+    //Declaring Scanner and Connection
+    private static Connection con;
+    private static Scanner sc;
+
+    public static void main(String[] args) {
+        //Connecting With Database
+        try {
+            con = DbConnection.connectdb();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        sc = new Scanner(System.in);
+        int choice;
+        //Welcome Statement
+        System.out.println("*************Welcome*************");
+        do {
+            //Select Who you want to log in as
+            System.out.println("Login as:\n1.Student\n2.Professor\n3.Admin\n4.Exit");
+
+            choice = sc.nextInt();
+            switch (choice) {
+                //if Student is Selected
+                case 1:
+                    Student s1 = new Student(con, sc);
+                    //number of tries of login
+                    int count = 3;
+                    while (count > 0) {
+                        try {
+                            boolean chk = s1.login();
+                            if (chk) {
+                                System.out.println("Logged in as Student");
+                                break;
+                            } else {
+                                throw new InvalidPasswordException("Wrong Password or email! you have  "+ (count - 1) + " tries left");
+                            }
+                        } catch (InvalidPasswordException | InvalidEmailException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        count--;
+                    }
+                    //if Password Was never Correct
+                    if (count == 0) {
+                        throw new InvalidPasswordException("Your Password or UserName is Incorrect,Try again later after Some time");
+                    }
+                    while (choice != 7) {
+                        System.out.println("""
+                                Which Operation will you like to perform:
+                                1. ViewAvailableCourses
+                                2. Register Courses
+                                3. ViewSchedule
+                                4. ViewAcademicDetails
+                                5. Drop course
+                                6. Submit Complaint
+                                7. Exit""");
+
+                        //updating choice
+                        choice = sc.nextInt();
+                        switch (choice) {
+                            //view Courses
+                            case 1:
+                                s1.viewCourses();
+                                break;
+                            //Register Courses
+                            case 2:
+                                boolean isCorrect=false;
+                                while (!isCorrect) {
+                                    try {
+                                        s1.registerCourse();
+                                        isCorrect=true;
+                                    } catch (CourseNotFoundException | InvalidSemesterException e) {
+                                        System.out.println(e.getMessage());
+                                    }
+                                }
+                                break;
+                            //View Schedule
+                            case 3:
+                                s1.viewSchedule();
+                                break;
+
+                            //Academic Record
+                            case 4:
+                               s1.displayAcademicDetails();
+                                break;
+
+                            //Drop Courses
+                            case 5:
+                                s1.dropCourse();
+                                break;
+
+                            //Complaints
+                            case 6:
+                                s1.submitComplaints();
+                                break;
+                            case 7:
+                                try {
+                                    System.out.println("Exiting...");
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    System.out.println(e.getMessage());
+                                }
+                                System.out.println("ThankYou For Using The System");
+                                break;
+                        }
+                    }
+                    break;
+                //if professor is Selected
+                case 2:
+                    System.out.println("Professor Selected");
+                    break;
+
+                //if Admin is Selected
+                case 3:
+                    System.out.println("Admin Selected");
+
+                    //if Exited
+                case 4:
+                    try {
+                        System.out.println("ThankYou for using the System.\nExiting...");
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        System.out.println(e.getMessage());
+                    }
+                    break;
+                default:
+                    throw new InvalidInputException("Invalid Choice");
+            }
+        } while (choice != 4);
+        try {
+            con.close();
+            sc.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+}
