@@ -3,14 +3,13 @@ package Users.Student;
 import Exceptions.CourseNotFoundException;
 import Exceptions.InvalidEmailException;
 import Exceptions.InvalidSemesterException;
-import Users.user;
+import Users.User;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
 
-public class Student implements user {
+public class Student implements User {
     private final Connection con;
     private final Scanner sc;
     private String rollNo;
@@ -52,7 +51,7 @@ public class Student implements user {
                         System.out.println(e.getMessage());
                     }
                 }
-                    System.out.println("Enter Your Branch: ");
+                    System.out.println("Enter the Branch you want to see courses of: ");
                     sc.nextLine();
                     branch = sc.nextLine();
                     vc.viewAvailableCourses(semester, branch);
@@ -133,7 +132,6 @@ public class Student implements user {
         ViewSchedule vs = new ViewSchedule(con);
         System.out.println("Enter Semester:");
         semester = sc.nextInt();
-        branch = sc.nextLine();
         vs.viewSchedule(semester, branch);
     }
 

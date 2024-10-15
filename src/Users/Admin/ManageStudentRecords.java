@@ -5,19 +5,20 @@ import Exceptions.InvalidInputException;
 import java.sql.*;
 import java.util.Scanner;
 
-public class ManageStudenttRecords {
-   private static String rollNo;
+public class ManageStudentRecords {
+    private static String rollNo;
 
-     static void manageStudentRecords(Connection con, Scanner sc) {
-        while (true) {
+    static void manageStudentRecords(Connection con, Scanner sc) {
+        int choice = 0;
+        while (choice != 5) {
             System.out.println("****Available Operation****");
-            System.out.println("1. Get Personal Details");
-            System.out.println("2. Change Details");
+            System.out.println("1. Get Personal Details"); //done
+            System.out.println("2. Change Details"); //done
             System.out.println("3. ");
-            System.out.println("4. Handle Complaints");
-            System.out.println("5. Quit/Exit");
+            System.out.println("4. Handle Complaints"); //done
+            System.out.println("5. Quit/Exit");  //done
             System.out.println("Select the operation you want to perform ");
-            int choice = sc.nextInt();
+            choice = sc.nextInt();
 
             switch (choice) {
                 case 1:
@@ -30,13 +31,21 @@ public class ManageStudenttRecords {
                 case 4:
                     handleComplaints(con, sc);
                     break;
+                case 5:
+                    System.out.println("Exiting from StudentRecords\nexiting...");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 default:
                     throw new InvalidInputException("Invalid Choice");
             }
         }
     }
 
-    //function to retrive details of student
+    //function to retrieve details of student
     private static void getDetails(Connection con, Scanner sc) {
         sc.nextLine();
         System.out.println("Enter Roll Number of Student: ");
@@ -54,16 +63,16 @@ public class ManageStudenttRecords {
                 String name = rs.getString("name");
                 String email = rs.getString("email");
                 String phoneNo = rs.getString("phone_number");
-                String degreeTypr = rs.getString("degreeType");
+                String degreeType = rs.getString("degreeType");
                 String dob = rs.getString("dob");
                 String branch = rs.getString("branch");
                 int sem = rs.getInt("semester");
                 String date = rs.getString("enrollmentDate");
 
                 System.out.println("+----------+--------+---------------------------+-------------+------------+--------+----------+---------------------+------------+");
-                System.out.println("|  SID     | NAME   |  EMAIL                    |PHONE NUMBER | DEGREETYPE | BRANCH | SEMESTER | ENROLLMENTDATE      |  DOB       |");
+                System.out.println("|  SID     | NAME   |  EMAIL                    |PHONE NUMBER | DEGREE TYPE | BRANCH | SEMESTER | ENROLLMENTDATE      |  DOB       |");
                 System.out.println("+----------+--------+---------------------------+-------------+------------+--------+----------+---------------------+------------+");
-                System.out.printf("|%-10s|%-8s|%-27s|%-13s|%-12s|%-8s|%-10s|%-21s|%-12s", sid, name, email, phoneNo, degreeTypr, branch, sem, date, dob);
+                System.out.printf("|%-10s|%-8s|%-27s|%-13s|%-12s|%-8s|%-10s|%-21s|%-12s", sid, name, email, phoneNo, degreeType, branch, sem, date, dob);
                 System.out.println();
                 System.out.println("+----------+--------+---------------------------+-------------+------------+--------+----------+---------------------+------------+");
 
@@ -79,30 +88,23 @@ public class ManageStudenttRecords {
         // Taking roll number as input
         System.out.println("Enter Roll Number ");
         rollNo = sc.next();
-
+        rollNo = rollNo.toUpperCase();
         // Selecting details
         System.out.println("Select Detail you want to change ");
         System.out.println("1. DOB\n2. Password\n3. Phone Number");
         int choice = sc.nextInt();
         String attribute;
-        Date newdob;
+        Date newDob;
         String oldP;
-        String newNumber = null; // Initialize to avoid potential null references
+        String newNumber; // Initialize to avoid potential null references
 
-        switch (choice) {
-            case 1:
-                attribute = "dob";
-                break;
-            case 2:
-                attribute = "password";
-                break;
-            case 3:
-                attribute = "phone_number"; // Change to match your database field
+        attribute = switch (choice) {
+            case 1 -> "dob";
+            case 2 -> "password";
+            case 3 -> "phone_number"; // Change to match your database field
 
-                break;
-            default:
-                throw new InvalidInputException("Invalid Choice");
-        }
+            default -> throw new InvalidInputException("Invalid Choice");
+        };
 
         // Checking various cases of choice
         try {
@@ -114,16 +116,16 @@ public class ManageStudenttRecords {
                 case 1:
                     System.out.println("Enter new DOB (yyyy-mm-dd)");
                     sc.nextLine(); // Consume leftover newline
-                    newdob = Date.valueOf(sc.nextLine());
-                    ps.setDate(1, newdob);
+                    newDob = Date.valueOf(sc.nextLine());
+                    ps.setDate(1, newDob);
                     break;
                 case 2:
                     System.out.println("Enter your old password:");
                     sc.nextLine(); // Consume leftover newline
                     oldP = sc.nextLine();
 
-                    String pwquery = "SELECT password FROM student WHERE sid = ?";
-                    try (PreparedStatement ps1 = con.prepareStatement(pwquery)) {
+                    String pwQuery = "SELECT password FROM student WHERE sid = ?";
+                    try (PreparedStatement ps1 = con.prepareStatement(pwQuery)) {
                         ps1.setString(1, rollNo);
                         ResultSet rs = ps1.executeQuery();
 
@@ -152,7 +154,7 @@ public class ManageStudenttRecords {
             }
 
             int rowsAffected = ps.executeUpdate();
-            System.out.println(rowsAffected > 0 ? "Updation Successful" : "Can't be Updated");
+            System.out.println(rowsAffected > 0 ? "Updated Successful" : "Can't be Updated");
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -161,34 +163,65 @@ public class ManageStudenttRecords {
 
     private static void handleComplaints(Connection con, Scanner sc) {
         System.out.println("Enter Roll No: ");
-        rollNo =sc.next();
-        rollNo.toUpperCase();
-        String query = "SELECT description,status FROM complaint WHERE sid=?";
+        rollNo = sc.next();
+        rollNo = rollNo.toUpperCase(); // Convert roll number to uppercase for consistency
+
+        // Query to get complaints for the specific student
+        String query = "SELECT description, status FROM complaint WHERE sid=?";
+
         try {
+            // Prepare the statement to fetch complaints
             PreparedStatement ps = con.prepareStatement(query);
             ps.setString(1, rollNo);
             ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                System.out.println("Complaint Not Found");
+
+            // Check if the student has any complaints
+            if (!rs.isBeforeFirst()) {  // If there are no results
+                System.out.println("No complaints found for this Roll Number.");
             } else {
+                // Iterate through the result set and process each complaint
                 while (rs.next()) {
-                    String description=rs.getString("description");
-                    System.out.println(description);
-                    if (rs.getString("status").equalsIgnoreCase("pending")) {
-                        String statusQuery = String.format("UPDATE complaint SET status='%s'", "resolved");
-                        PreparedStatement ps1 = con.prepareStatement(statusQuery);
-                        int rowsAffected = ps1.executeUpdate();
-                        System.out.println(rowsAffected > 0 ? "Description:\n"+description+"\nComplaint Managed Succesfully" : "Complant could not be resolved,come again later");
-                    }
-                    else{
-                        System.out.println( "Description:\n"+description+"\nComplaint status:resolved" );
+                    String description = rs.getString("description");
+                    String status = rs.getString("status");
+
+                    // Display complaint details
+                    System.out.println("Complaint Description: " + description);
+                    System.out.println("Status: " + status);
+
+                    // If the complaint is pending, prompt to resolve it
+                    if (status.equalsIgnoreCase("pending")) {
+                        System.out.println("Do you want to resolve this complaint? (yes/no)");
+                        String resolve = sc.next();
+
+                        if (resolve.equalsIgnoreCase("yes")) {
+                            // Update the status to 'Resolved'
+                            String updateQuery = "UPDATE complaint SET status = 'Resolved' WHERE sid = ? AND description = ?";
+                            PreparedStatement psUpdate = con.prepareStatement(updateQuery);
+                            psUpdate.setString(1, rollNo);
+                            psUpdate.setString(2, description);
+
+                            int rowsAffected = psUpdate.executeUpdate(); // Execute the update
+                            if (rowsAffected > 0) {
+                                System.out.println("Complaint resolved successfully.");
+                            } else {
+                                System.out.println("Error resolving complaint. Please try again.");
+                            }
+                            psUpdate.close();  // Close the update statement
+                        }
+                    } else {
+                        // Inform the user if the complaint is already resolved
+                        System.out.println("This complaint is already resolved.");
                     }
                 }
-
             }
+            ps.close();  // Close the prepared statement
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            // Handle SQL exceptions
+            System.out.println("Error handling complaints: " + e.getMessage());
         }
+
     }
+
 }
+
 

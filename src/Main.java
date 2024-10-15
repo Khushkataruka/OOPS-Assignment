@@ -1,6 +1,7 @@
 import DatabasePackage.DbConnection;
 import Exceptions.*;
 
+import Users.Admin.Admin;
 import Users.Student.Student;
 
 import java.sql.Connection;
@@ -29,7 +30,7 @@ public class Main {
 
             choice = sc.nextInt();
             switch (choice) {
-                //if Student is Selected
+                //if Student is Selected (Completed)
                 case 1:
                     Student s1 = new Student(con, sc);
                     //number of tries of login
@@ -41,7 +42,7 @@ public class Main {
                                 System.out.println("Logged in as Student");
                                 break;
                             } else {
-                                throw new InvalidPasswordException("Wrong Password or email! you have  "+ (count - 1) + " tries left");
+                                throw new InvalidPasswordException("Wrong Password or email! you have  " + (count - 1) + " tries left");
                             }
                         } catch (InvalidPasswordException | InvalidEmailException e) {
                             System.out.println(e.getMessage());
@@ -72,11 +73,11 @@ public class Main {
                                 break;
                             //Register Courses
                             case 2:
-                                boolean isCorrect=false;
+                                boolean isCorrect = false;
                                 while (!isCorrect) {
                                     try {
                                         s1.registerCourse();
-                                        isCorrect=true;
+                                        isCorrect = true;
                                     } catch (CourseNotFoundException | InvalidSemesterException e) {
                                         System.out.println(e.getMessage());
                                     }
@@ -89,7 +90,7 @@ public class Main {
 
                             //Academic Record
                             case 4:
-                               s1.displayAcademicDetails();
+                                s1.displayAcademicDetails();
                                 break;
 
                             //Drop Courses
@@ -120,9 +121,24 @@ public class Main {
 
                 //if Admin is Selected
                 case 3:
-                    System.out.println("Admin Selected");
-
-                    //if Exited
+                    Admin admin = new Admin(con, sc);
+                    int adminCount = 3;
+                    boolean isLogged = false;
+                    while (adminCount > 0) {
+                        try {
+                            isLogged = admin.login();
+                            break;
+                        } catch (InvalidPasswordException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        adminCount--;
+                    }
+                    if (isLogged)
+                        admin.getShow();
+                    else
+                        throw new InvalidPasswordException("You have tried you password multiple times,try again later");
+                    break;
+                //if Exited
                 case 4:
                     try {
                         System.out.println("ThankYou for using the System.\nExiting...");
