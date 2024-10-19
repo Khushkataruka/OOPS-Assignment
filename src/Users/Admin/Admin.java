@@ -20,6 +20,7 @@ public class Admin implements User {
     }
 
 
+
     public void getShow() {
         int choice=0;
         while (choice!=4) {
@@ -48,6 +49,7 @@ public class Admin implements User {
                         }
                         count--;
                     }
+                    break;
                 case 4:
                     System.out.println("ThankYou for Using Admin\n exiting...");
                     try {
