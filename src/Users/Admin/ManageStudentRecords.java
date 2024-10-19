@@ -1,9 +1,16 @@
 package Users.Admin;
 
+import Exceptions.CourseNotFoundException;
 import Exceptions.InvalidInputException;
+import Exceptions.MarksNegativeException;
+import Exceptions.UserNotFoundException;
+import Users.Student.AcademicDetails;
+import Users.Student.ViewCourses;
 
 import java.sql.*;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class ManageStudentRecords {
     private static String rollNo;
@@ -14,7 +21,7 @@ public class ManageStudentRecords {
             System.out.println("****Available Operation****");
             System.out.println("1. Get Personal Details"); //done
             System.out.println("2. Change Details"); //done
-            System.out.println("3. ");
+            System.out.println("3. Assign Grades");
             System.out.println("4. Handle Complaints"); //done
             System.out.println("5. Quit/Exit");  //done
             System.out.println("Select the operation you want to perform ");
@@ -27,7 +34,9 @@ public class ManageStudentRecords {
                 case 2:
                     changeDetails(con, sc);
                     break;
-
+                case 3:
+                    assignGrades(con, sc);
+                    break;
                 case 4:
                     handleComplaints(con, sc);
                     break;
@@ -125,7 +134,8 @@ public class ManageStudentRecords {
                     oldP = sc.nextLine();
 
                     String pwQuery = "SELECT password FROM student WHERE sid = ?";
-                    try (PreparedStatement ps1 = con.prepareStatement(pwQuery)) {
+                    try  {
+                        PreparedStatement ps1 = con.prepareStatement(pwQuery);
                         ps1.setString(1, rollNo);
                         ResultSet rs = ps1.executeQuery();
 
@@ -142,6 +152,8 @@ public class ManageStudentRecords {
                             System.out.println("Data not Found");
                             return; // Exit if no data found
                         }
+                    }catch (SQLException e){
+                        System.out.println(e.getMessage());
                     }
                     break;
                 case 3:
@@ -156,6 +168,103 @@ public class ManageStudentRecords {
             int rowsAffected = ps.executeUpdate();
             System.out.println(rowsAffected > 0 ? "Updated Successful" : "Can't be Updated");
 
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void assignGrades(Connection con, Scanner sc) {
+        System.out.println("Enter Roll No: ");
+        rollNo = sc.next();
+        int semester = 0;
+        String query = "SELECT semester FROM student WHERE sid=?";
+        try {
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setString(1, rollNo);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next())
+                semester = rs.getInt("semester");
+            if (semester == 0)
+                throw new UserNotFoundException("User Not Found");
+            else {
+                Set<String> registered_courses = new HashSet<>();
+
+                //calculating total credits
+                int total_credits=0;
+                int credits_obtained=0;
+                //display registered courses
+                ViewCourses vc = new ViewCourses(con);
+                registered_courses = vc.viewRegisteredCourses(rollNo);
+
+                //display academic details
+                AcademicDetails ad = new AcademicDetails(con);
+                ad.displayAcademicDetails(rollNo, semester);
+
+                System.out.println("Enter Course ID: ");
+                String course_id = sc.next();
+                course_id=course_id.toUpperCase();
+                if (registered_courses.contains(course_id)) {
+                    System.out.println("Enter Your Marks For given courseID:");
+                    int marks = sc.nextInt();
+                    String grade = "";
+                    if (marks > 90 && marks <= 100) {
+                        grade = "AA";
+                    } else if (marks > 80 && marks <= 90) {
+                        grade = "AB";
+                    } else if (marks > 70 && marks <= 80) {
+                        grade = "BB";
+                    } else if (marks > 60 && marks <= 70) {
+                        grade = "BC";
+                    } else if (marks > 50 && marks <= 60) {
+                        grade = "CC";
+                    } else if (marks > 40 && marks <= 50) {
+                        grade = "CD";
+                    } else if (marks > 30 && marks <= 40) {
+                        grade = "DD";
+                    }else if(marks<=30 && marks>=0 )  {
+                        grade = "FF";
+                    }
+                    else
+                    {
+                        throw new MarksNegativeException("Marks Must be Between 0-100");
+                    }
+                    String gradeQuery="SELECT credits FROM courses WHERE course_id=?";
+                    PreparedStatement gradePs=con.prepareStatement(gradeQuery);
+                    gradePs.setString(1,course_id);
+                    ResultSet resultSet=gradePs.executeQuery();
+
+                    if(resultSet.next())
+                    {
+                        total_credits=resultSet.getInt("credits");
+                    }
+                    if(!grade.equals("FF"))
+                        credits_obtained=total_credits;
+
+                    String updateQuery="""
+                            INSERT INTO results(semNo,sid,cid,credits_obtained,total_credits,grade)
+                            VALUES(?,?,?,?,?,?)""";
+                    PreparedStatement us=con.prepareStatement(updateQuery);
+                    us.setInt(1,semester);
+                    us.setString(2,rollNo);
+                    us.setString(3,course_id);
+                    us.setInt(4,credits_obtained);
+                    us.setInt(5,total_credits);
+                    us.setString(6,grade);
+                    int rowsAffected =us.executeUpdate();
+                    if(rowsAffected>0)
+                    {
+                        System.out.println("Grade Assigned Successfully");
+                    }
+                    else
+                    {
+                        System.out.println("Some Error Occurred Try Again Later");
+                    }
+                } else {
+                    throw new CourseNotFoundException("Course Not found");
+                }
+
+
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

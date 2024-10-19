@@ -2,6 +2,7 @@ import DatabasePackage.DbConnection;
 import Exceptions.*;
 
 import Users.Admin.Admin;
+import Users.Professor.Professor;
 import Users.Student.Student;
 
 import java.sql.Connection;
@@ -103,20 +104,41 @@ public class Main {
                                 s1.submitComplaints();
                                 break;
                             case 7:
+                                System.out.println("ThankYou For Using The System");
                                 try {
                                     System.out.println("Exiting...");
                                     Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     System.out.println(e.getMessage());
                                 }
-                                System.out.println("ThankYou For Using The System");
                                 break;
                         }
                     }
                     break;
                 //if professor is Selected
                 case 2:
-                    System.out.println("Professor Selected");
+                    Professor pr=new Professor(con,sc);
+                    //number of tries of login
+                    int count1 = 3;
+                    while (count1 > 0) {
+                        try {
+                            boolean chk = pr.login();
+                            if (chk) {
+                                System.out.println("Logged in as Professor");
+                                break;
+                            } else {
+                                throw new InvalidPasswordException("Wrong Password or email! you have  " + (count1 - 1) + " tries left");
+                            }
+                        } catch (InvalidPasswordException | InvalidEmailException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        count1--;
+                    }
+                    //if Password Was never Correct
+                    if (count1 == 0) {
+                        throw new InvalidPasswordException("Your Password or UserName is Incorrect,Try again later after Some time");
+                    }
+                    pr.getFunctions();
                     break;
 
                 //if Admin is Selected

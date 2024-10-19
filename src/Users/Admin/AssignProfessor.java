@@ -15,14 +15,21 @@ public class AssignProfessor {
         System.out.println("Enter the professor ID:");
         String prof_id = scanner.next();
         prof_id = prof_id.toUpperCase();
+        boolean isCorrect=false;
+
+
+        if((prof_id.length()==4) && prof_id.charAt(0)=='P' && (prof_id.charAt(1)>='0' && prof_id.charAt(1)<='9')
+           &&  (prof_id.charAt(2)>='0' && prof_id.charAt(2)<='9') && (prof_id.charAt(3)>='0' && prof_id.charAt(3)<='9') ){
+            isCorrect=true;
+        }
+        else{
+            isCorrect=false;
+        }
 
         //check if professor id is valid
-        String regex = "^[p]\\d(3)$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(prof_id);
-        if (matcher.matches()) {
+        if (isCorrect) {
             System.out.println("Enter the course ID:");
-            String course_id = scanner.nextLine();
+            String course_id = scanner.next();
             course_id = course_id.toUpperCase();
 
             try {

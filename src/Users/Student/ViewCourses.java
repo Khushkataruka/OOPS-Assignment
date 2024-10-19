@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,7 +51,8 @@ public class ViewCourses {
         return course_ids;
     }
 
-    public void viewRegisteredCourses(String rollNo) {
+    public Set<String> viewRegisteredCourses(String rollNo) {
+        Set<String>registered_courses = new HashSet<>();
         String query1 = """
         SELECT enrolledStudents.course_id, course_name, credits
         FROM enrolledStudents
@@ -81,7 +81,7 @@ public class ViewCourses {
                 String courseId = results.getString("course_id");
                 String courseName = results.getString("course_name");
                 int credits = results.getInt("credits");
-
+                registered_courses.add(courseId);
                 // Format and print the course information
                 System.out.printf("|%-10s|%-27s|%-8d|\n", courseId, courseName, credits);
             }
@@ -95,11 +95,11 @@ public class ViewCourses {
             {
                 try {
                     ps.close();
-                    ps=null;
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
         }
+        return registered_courses;
     }
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 public class AcademicDetails {
     Connection con;
 
-    AcademicDetails(Connection con) {
+    public AcademicDetails(Connection con) {
         this.con = con;
     }
 
